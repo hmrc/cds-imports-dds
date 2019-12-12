@@ -16,36 +16,30 @@
 
 package uk.gov.hmrc.cdsimportsdds.controllers
 
-import java.time.{Instant, LocalDateTime, ZoneOffset}
-
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers._
+import org.mockito.BDDMockito._
+import org.mockito.Mockito.{reset, verify, verifyZeroInteractions}
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterEach, MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.libs.json.Json.toJson
-import play.api.mvc.Result
-import play.api.test.FakeRequest
-import play.api.test.Helpers.{CREATED, contentAsJson, route, status}
-import uk.gov.hmrc.cdsimportsdds.models.ImportsDeclaration
-import uk.gov.hmrc.cdsimportsdds.services.DeclarationService
-import uk.gov.hmrc.http.HeaderCarrier
-import org.mockito.BDDMockito._
-import org.mockito.Mockito.{reset, verify, verifyZeroInteractions}
 import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
-import play.api.libs.json.{JsObject, Json}
+import play.api.libs.json.Json
+import play.api.libs.json.Json.toJson
 import play.api.mvc.Result
-import play.api.test.Helpers.{status, _}
+import play.api.test.FakeRequest
+import play.api.test.Helpers.{CREATED, contentAsJson, route, status, _}
+import uk.gov.hmrc.cdsimportsdds.models.ImportsDeclaration
+import uk.gov.hmrc.cdsimportsdds.services.DeclarationService
 import uk.gov.hmrc.cdsimportsdds.util.RESTFormatters.formatImportsDeclaration
 import uk.gov.hmrc.cdsimportsdds.utils.ImportsDeclarationBuilder
+import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
-import scala.concurrent.duration._
-import scala.concurrent.{Await, Future}
+import scala.concurrent.duration.{FiniteDuration, _}
 
 class DeclarationControllerSpec extends WordSpec
   with GuiceOneAppPerSuite
@@ -90,10 +84,28 @@ class DeclarationControllerSpec extends WordSpec
 
     "return 400" when {
       "invalid json" in {
-        val result: Future[Result] = route(app, post.withJsonBody(Json.toJson("lrn1234"))).get
+        val result: Future[Result] = route(app, post.withHeaders(("X-EORI-Number", eori))
+                                                    .withJsonBody(toJson("lrn1234"))).get
 
         status(result) must be(BAD_REQUEST)
         contentAsJson(result) mustBe Json.obj("message" -> "Bad Request", "errors" -> Json.arr(": error.expected.jsobject"))
+        verifyZeroInteractions(declarationService)
+      }
+
+      "lrn is missing" in {
+        val result: Future[Result] = route(app, post.withHeaders(("X-EORI-Number", eori))
+                                                    .withJsonBody(Json.obj("foo" -> "123"))).get
+
+        status(result) must be(BAD_REQUEST)
+        contentAsJson(result) mustBe Json.obj("message" -> "Bad Request", "errors" -> Json.arr("/lrn: error.path.missing"))
+        verifyZeroInteractions(declarationService)
+      }
+
+      "eori is missing" in {
+        val result: Future[Result] = route(app, post.withJsonBody(toJson(importDeclarationRequest))).get
+
+        status(result) must be(BAD_REQUEST)
+        contentAsJson(result) mustBe Json.obj("message" -> "X-EORI-Number header missing")
         verifyZeroInteractions(declarationService)
       }
     }

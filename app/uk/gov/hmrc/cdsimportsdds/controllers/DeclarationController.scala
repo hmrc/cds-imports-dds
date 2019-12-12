@@ -16,15 +16,16 @@
 
 package uk.gov.hmrc.cdsimportsdds.controllers
 
-import java.time.Instant
 import java.util.UUID
 
 import javax.inject.{Inject, Singleton}
-import play.api.mvc.{Action, ControllerComponents}
+import play.api.libs.json.Json
+import play.api.mvc.{Action, ControllerComponents, Result}
 import uk.gov.hmrc.cdsimportsdds.config.AppConfig
 import uk.gov.hmrc.cdsimportsdds.models.ImportsDeclaration
-import uk.gov.hmrc.cdsimportsdds.util.RESTFormatters.formatImportsDeclaration
 import uk.gov.hmrc.cdsimportsdds.services.DeclarationService
+import uk.gov.hmrc.cdsimportsdds.util.RESTFormatters.formatImportsDeclaration
+import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -38,10 +39,15 @@ class DeclarationController @Inject()(
 
   def create(): Action[ImportsDeclarationRequest] = Action.async(parsingJson[ImportsDeclarationRequest]) { implicit request =>
     val eori = request.headers.get("X-EORI-Number")
-    // TODO handle optional eori
-    val importsDeclarationRequest: ImportsDeclarationRequest = request.body
+    eori match {
+      case Some(eori) => saveImportsDeclaration(request.body, eori)
+      case _ => Future.successful(BadRequest(Json.toJson(ErrorResponse("X-EORI-Number header missing"))))
+    }
+  }
+
+  private def saveImportsDeclaration(importsDeclarationRequest: ImportsDeclarationRequest, eori: String)(implicit hc: HeaderCarrier): Future[Result] = {
     val importsDeclaration: ImportsDeclaration =
-      importsDeclarationRequest.toImportsDeclaration(id = UUID.randomUUID().toString, eori = eori.getOrElse(""))
+      importsDeclarationRequest.toImportsDeclaration(id = UUID.randomUUID().toString, eori)
     declarationService
       .create(importsDeclaration)
       .map(declaration => Created(declaration))

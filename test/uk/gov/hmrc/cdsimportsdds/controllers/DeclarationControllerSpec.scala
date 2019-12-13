@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.cdsimportsdds.controllers
 
+import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers._
 import org.mockito.BDDMockito._
@@ -48,6 +49,8 @@ class DeclarationControllerSpec extends WordSpec
   with MustMatchers
   with MockitoSugar
   with ImportsDeclarationBuilder {
+
+  SharedMetricRegistries.clear()
 
   override lazy val app: Application = GuiceApplicationBuilder()
     .overrides(bind[DeclarationService].to(declarationService))

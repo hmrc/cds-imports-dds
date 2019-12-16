@@ -17,15 +17,15 @@
 package uk.gov.hmrc.cdsimportsdds.controllers
 
 import play.api.Logger
+import play.api.http.{ContentTypeOf, ContentTypes, Writeable}
 import play.api.libs.json._
-import play.api.mvc.{BodyParser, ControllerComponents}
-import uk.gov.hmrc.cdsimportsdds.util.JSONResponses
+import play.api.mvc.{BodyParser, Codec, ControllerComponents}
 import uk.gov.hmrc.play.bootstrap.controller.BackendController
 
 import scala.concurrent.ExecutionContext
 
 abstract class RESTController(override val controllerComponents: ControllerComponents)
-    extends BackendController(controllerComponents) with JSONResponses {
+    extends BackendController(controllerComponents) {
 
   private val logger = Logger(this.getClass)
 
@@ -39,6 +39,11 @@ abstract class RESTController(override val controllerComponents: ControllerCompo
         logger.warn(s"Bad Request [$payload]")
         Left(BadRequest(payload))
     }
+  }
+
+  implicit def writable[T](implicit writes: Writes[T], code: Codec): Writeable[T] = {
+    implicit val contentType: ContentTypeOf[T] = ContentTypeOf[T](Some(ContentTypes.JSON))
+    Writeable(Writeable.writeableOf_JsValue.transform.compose(writes.writes))
   }
 
 }

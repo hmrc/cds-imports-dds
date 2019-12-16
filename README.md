@@ -1,7 +1,13 @@
 
 # cds-imports-dds
 
-This is a placeholder README.md for a new repository
+### End Points:
+POST /declarations with header `X-EORI-Identifier` 
+
+#### Examples:
+```bash
+curl -d '{"lrn": "1234"}' -H "X-EORI-Identifier: eori123" -H "Content-Type: application/json" -XPOST http://localhost:9759/declarations
+```
 
 ### License
 

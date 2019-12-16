@@ -47,7 +47,7 @@ class DeclarationServiceSpec extends WordSpec
       val persistedDeclaration = mock[ImportsDeclaration]
       given(declarationRepository.create(any())).willReturn(Future.successful(persistedDeclaration))
 
-      service.create(declaration)(hc, ec).futureValue mustBe persistedDeclaration
+      service.create(declaration).futureValue mustBe persistedDeclaration
 
       verify(declarationRepository).create(declaration)
     }

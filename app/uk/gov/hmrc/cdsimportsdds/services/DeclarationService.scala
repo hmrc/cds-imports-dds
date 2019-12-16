@@ -17,6 +17,7 @@
 package uk.gov.hmrc.cdsimportsdds.services
 
 import javax.inject.Inject
+import uk.gov.hmrc.cdsimportsdds.domain.Eori
 import uk.gov.hmrc.cdsimportsdds.models.ImportsDeclaration
 import uk.gov.hmrc.cdsimportsdds.repositories.DeclarationRepository
 import uk.gov.hmrc.http.HeaderCarrier
@@ -25,6 +26,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class DeclarationService @Inject()(declarationRepository: DeclarationRepository) {
 
-  def create(declaration: ImportsDeclaration)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[ImportsDeclaration] =
+  def create(declaration: ImportsDeclaration): Future[ImportsDeclaration] =
     declarationRepository.create(declaration)
+
+  def findByEori(eori: Eori): Future[Seq[ImportsDeclaration]] = ???
 }

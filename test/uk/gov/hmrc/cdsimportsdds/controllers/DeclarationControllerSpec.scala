@@ -18,7 +18,7 @@ package uk.gov.hmrc.cdsimportsdds.controllers
 
 import com.codahale.metrics.SharedMetricRegistries
 import org.mockito.ArgumentCaptor
-import org.mockito.ArgumentMatchers._
+import org.mockito.ArgumentMatchers.{any, eq => meq}
 import org.mockito.BDDMockito._
 import org.mockito.Mockito.{reset, verify, verifyZeroInteractions}
 import org.scalatest.concurrent.ScalaFutures
@@ -60,9 +60,37 @@ class DeclarationControllerSpec extends WordSpec
 
   implicit val defaultTimeout: FiniteDuration = 5 seconds
 
+  private val EORI_HEADER_NAME = "X-EORI-Identifier"
+
   override def beforeEach(): Unit = {
     super.beforeEach()
     reset(declarationService)
+  }
+
+  "Find by EORI" should {
+    val get = FakeRequest("GET", "/declarations")
+    val eori = "eori"
+
+    "return the persisted declarations" when {
+      "some exist with eori" in {
+        val listOfDeclarations = Seq(anImportsDeclaration)
+        given(declarationService.findByEori(meq(eori))).willReturn(Future.successful(listOfDeclarations))
+
+        val result = route(app, get.withHeaders((EORI_HEADER_NAME, eori))).get
+
+        status(result) must be(OK)
+
+        contentAsJson(result) mustBe toJson(listOfDeclarations)
+      }
+    }
+
+    "return 401" when {
+      "eori is missing" in {
+        val result = route(app, get).get
+
+        status(result) must be(UNAUTHORIZED)
+      }
+    }
   }
 
   "POST /declarations" should {
@@ -73,10 +101,9 @@ class DeclarationControllerSpec extends WordSpec
     "return 201" when {
       "request is valid" in {
         val declaration = anImportsDeclaration.copy(eori = eori)
-        given(declarationService.create(any[ImportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
-          .willReturn(Future.successful(declaration))
+        given(declarationService.create(any[ImportsDeclaration])).willReturn(Future.successful(declaration))
 
-        val result: Future[Result] = route(app, post.withHeaders(("X-EORI-Identifier", eori))
+        val result: Future[Result] = route(app, post.withHeaders((EORI_HEADER_NAME, eori))
                                                     .withJsonBody(toJson(importDeclarationRequest))).get
 
         status(result) must be(CREATED)
@@ -103,11 +130,13 @@ class DeclarationControllerSpec extends WordSpec
         contentAsJson(result) mustBe Json.obj("message" -> "Bad Request", "errors" -> Json.arr("/lrn: error.path.missing"))
         verifyZeroInteractions(declarationService)
       }
+    }
 
+    "return 401" when {
       "eori is missing" in {
         val result: Future[Result] = route(app, post.withJsonBody(toJson(importDeclarationRequest))).get
 
-        status(result) must be(BAD_REQUEST)
+        status(result) must be(UNAUTHORIZED)
         contentAsJson(result) mustBe Json.obj("message" -> "X-EORI-Identifier header missing")
         verifyZeroInteractions(declarationService)
       }
@@ -117,7 +146,7 @@ class DeclarationControllerSpec extends WordSpec
 
   def theDeclarationCreated: ImportsDeclaration = {
     val captor: ArgumentCaptor[ImportsDeclaration] = ArgumentCaptor.forClass(classOf[ImportsDeclaration])
-    verify(declarationService).create(captor.capture())(any[HeaderCarrier], any[ExecutionContext])
+    verify(declarationService).create(captor.capture())
     captor.getValue
   }
 

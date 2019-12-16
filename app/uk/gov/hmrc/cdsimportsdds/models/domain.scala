@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsimportsdds.util
+package uk.gov.hmrc.cdsimportsdds
 
-import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.cdsimportsdds.models.ImportsDeclaration
+package object domain {
 
-object RESTFormatters {
-
-  implicit val formatImportsDeclaration: OFormat[ImportsDeclaration] = Json.format[ImportsDeclaration]
+  type Eori = String
 }

@@ -18,7 +18,9 @@ package uk.gov.hmrc.cdsimportsdds.models
 
 import java.time.Instant
 
+import uk.gov.hmrc.cdsimportsdds.domain.Eori
+
 case class ImportsDeclaration(id: String,
-                              eori: String,
+                              eori: Eori,
                               lrn: String,
                               createdDateTime: Instant)

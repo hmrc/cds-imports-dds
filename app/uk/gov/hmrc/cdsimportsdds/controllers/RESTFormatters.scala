@@ -14,25 +14,12 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.cdsimportsdds.util
+package uk.gov.hmrc.cdsimportsdds.controllers
 
-import java.time.Instant
-
-import play.api.libs.json.{JsError, JsNumber, JsObject, JsResult, JsSuccess, JsValue, Json, OFormat}
+import play.api.libs.json.{Json, OFormat}
 import uk.gov.hmrc.cdsimportsdds.models.ImportsDeclaration
 
-object MongoFormatters {
+object RESTFormatters {
 
-  object ImportsDeclaration {
-
-    implicit val formatInstant: OFormat[Instant] = new OFormat[Instant] {
-      override def writes(datetime: Instant): JsObject =
-        Json.obj("$date" -> datetime.toEpochMilli)
-
-      override def reads(json: JsValue): JsResult[Instant] = ???
-    }
-    implicit val format: OFormat[ImportsDeclaration] = Json.format[ImportsDeclaration]
-
-  }
-
+  implicit val formatImportsDeclaration: OFormat[ImportsDeclaration] = Json.format[ImportsDeclaration]
 }

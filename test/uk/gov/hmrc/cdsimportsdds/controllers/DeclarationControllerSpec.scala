@@ -35,7 +35,7 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers.{CREATED, contentAsJson, route, status, _}
 import uk.gov.hmrc.cdsimportsdds.models.ImportsDeclaration
 import uk.gov.hmrc.cdsimportsdds.services.DeclarationService
-import uk.gov.hmrc.cdsimportsdds.util.RESTFormatters.formatImportsDeclaration
+import RESTFormatters.formatImportsDeclaration
 import uk.gov.hmrc.cdsimportsdds.utils.ImportsDeclarationBuilder
 import uk.gov.hmrc.http.HeaderCarrier
 
@@ -76,7 +76,7 @@ class DeclarationControllerSpec extends WordSpec
         given(declarationService.create(any[ImportsDeclaration])(any[HeaderCarrier], any[ExecutionContext]))
           .willReturn(Future.successful(declaration))
 
-        val result: Future[Result] = route(app, post.withHeaders(("X-EORI-Number", eori))
+        val result: Future[Result] = route(app, post.withHeaders(("X-EORI-Identifier", eori))
                                                     .withJsonBody(toJson(importDeclarationRequest))).get
 
         status(result) must be(CREATED)
@@ -87,7 +87,7 @@ class DeclarationControllerSpec extends WordSpec
 
     "return 400" when {
       "invalid json" in {
-        val result: Future[Result] = route(app, post.withHeaders(("X-EORI-Number", eori))
+        val result: Future[Result] = route(app, post.withHeaders(("X-EORI-Identifier", eori))
                                                     .withJsonBody(toJson("lrn1234"))).get
 
         status(result) must be(BAD_REQUEST)
@@ -96,7 +96,7 @@ class DeclarationControllerSpec extends WordSpec
       }
 
       "lrn is missing" in {
-        val result: Future[Result] = route(app, post.withHeaders(("X-EORI-Number", eori))
+        val result: Future[Result] = route(app, post.withHeaders(("X-EORI-Identifier", eori))
                                                     .withJsonBody(Json.obj("foo" -> "123"))).get
 
         status(result) must be(BAD_REQUEST)
@@ -108,7 +108,7 @@ class DeclarationControllerSpec extends WordSpec
         val result: Future[Result] = route(app, post.withJsonBody(toJson(importDeclarationRequest))).get
 
         status(result) must be(BAD_REQUEST)
-        contentAsJson(result) mustBe Json.obj("message" -> "X-EORI-Number header missing")
+        contentAsJson(result) mustBe Json.obj("message" -> "X-EORI-Identifier header missing")
         verifyZeroInteractions(declarationService)
       }
     }

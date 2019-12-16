@@ -22,7 +22,7 @@ import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.cdsimportsdds.config.AppConfig
 import uk.gov.hmrc.cdsimportsdds.models.ImportsDeclaration
-import uk.gov.hmrc.cdsimportsdds.util.MongoFormatters.ImportsDeclaration.format
+import MongoFormatters.format
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 

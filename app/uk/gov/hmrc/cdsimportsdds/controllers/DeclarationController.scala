@@ -24,7 +24,7 @@ import play.api.mvc.{Action, ControllerComponents, Result}
 import uk.gov.hmrc.cdsimportsdds.config.AppConfig
 import uk.gov.hmrc.cdsimportsdds.models.ImportsDeclaration
 import uk.gov.hmrc.cdsimportsdds.services.DeclarationService
-import uk.gov.hmrc.cdsimportsdds.util.RESTFormatters.formatImportsDeclaration
+import RESTFormatters.formatImportsDeclaration
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -38,10 +38,10 @@ class DeclarationController @Inject()(
   extends RESTController(controllerComponents) {
 
   def create(): Action[ImportsDeclarationRequest] = Action.async(parsingJson[ImportsDeclarationRequest]) { implicit request =>
-    val eori = request.headers.get("X-EORI-Number")
+    val eori = request.headers.get("X-EORI-Identifier")
     eori match {
       case Some(eori) => saveImportsDeclaration(request.body, eori)
-      case _ => Future.successful(BadRequest(Json.toJson(ErrorResponse("X-EORI-Number header missing"))))
+      case _ => Future.successful(BadRequest(Json.toJson(ErrorResponse("X-EORI-Identifier header missing"))))
     }
   }
 

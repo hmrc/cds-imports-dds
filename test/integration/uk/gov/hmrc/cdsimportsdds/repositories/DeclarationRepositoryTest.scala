@@ -37,7 +37,7 @@ class DeclarationRepositoryTest extends WordSpec
 
   private val injector = {
     SharedMetricRegistries.clear()
-    GuiceApplicationBuilder().injector()
+      GuiceApplicationBuilder().injector()
   }
 
   private val repository = injector.instanceOf[DeclarationRepository]

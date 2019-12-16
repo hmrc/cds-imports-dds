@@ -29,5 +29,7 @@ class DeclarationService @Inject()(declarationRepository: DeclarationRepository)
   def create(declaration: ImportsDeclaration): Future[ImportsDeclaration] =
     declarationRepository.create(declaration)
 
-  def findByEori(eori: Eori): Future[Seq[ImportsDeclaration]] = ???
+  def findByEori(eori: Eori): Future[Seq[ImportsDeclaration]] =
+    declarationRepository.findByEori(eori)
+
 }

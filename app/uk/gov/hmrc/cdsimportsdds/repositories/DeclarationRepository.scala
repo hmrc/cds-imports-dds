@@ -22,7 +22,8 @@ import play.modules.reactivemongo.ReactiveMongoComponent
 import reactivemongo.bson.BSONObjectID
 import uk.gov.hmrc.cdsimportsdds.config.AppConfig
 import uk.gov.hmrc.cdsimportsdds.models.ImportsDeclaration
-import MongoFormatters.format
+import MongoFormatters.formatDeclaration
+import uk.gov.hmrc.cdsimportsdds.domain.Eori
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
 
@@ -32,12 +33,15 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
   extends ReactiveRepository[ImportsDeclaration, BSONObjectID](
     "declarations",
     mc.mongoConnector.db,
-    format,
+    formatDeclaration,
     objectIdFormats
   ) {
 
   def create(declaration: ImportsDeclaration): Future[ImportsDeclaration] =
     super.insert(declaration).map(_ => declaration)
+
+  def findByEori(eori: Eori): Future[Seq[ImportsDeclaration]] =
+    super.find("eori" -> eori)
 
 }
 

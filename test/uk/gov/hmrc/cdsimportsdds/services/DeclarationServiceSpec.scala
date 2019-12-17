@@ -16,18 +16,15 @@
 
 package uk.gov.hmrc.cdsimportsdds.services
 
-import org.mockito.ArgumentMatchers._
+import org.mockito.ArgumentMatchers.{eq => meq}
 import org.mockito.BDDMockito._
-import org.mockito.Mockito._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{MustMatchers, WordSpec}
 import org.scalatestplus.mockito.MockitoSugar
 import uk.gov.hmrc.cdsimportsdds.models.ImportsDeclaration
 import uk.gov.hmrc.cdsimportsdds.repositories.DeclarationRepository
 import uk.gov.hmrc.cdsimportsdds.utils.ImportsDeclarationBuilder
-import uk.gov.hmrc.http.HeaderCarrier
 
-import scala.concurrent.ExecutionContext.Implicits
 import scala.concurrent.Future
 
 class DeclarationServiceSpec extends WordSpec
@@ -38,18 +35,24 @@ class DeclarationServiceSpec extends WordSpec
 
   private val declarationRepository = mock[DeclarationRepository]
   private val service = new DeclarationService(declarationRepository)
-  private val hc = mock[HeaderCarrier]
-  private val ec = Implicits.global
 
   "Create" should {
     "delegate to the repository" in {
-      val declaration = anImportsDeclaration.copy()
+      val declaration = anImportsDeclaration
       val persistedDeclaration = mock[ImportsDeclaration]
-      given(declarationRepository.create(any())).willReturn(Future.successful(persistedDeclaration))
+      given(declarationRepository.create(meq(declaration))).willReturn(Future.successful(persistedDeclaration))
 
-      service.create(declaration)(hc, ec).futureValue mustBe persistedDeclaration
+      service.create(declaration).futureValue mustBe persistedDeclaration
+    }
+  }
 
-      verify(declarationRepository).create(declaration)
+  "findByEori" should {
+    "delegate to the repository" in {
+      val eori = "GB1234"
+      val persistedDeclaration = mock[ImportsDeclaration]
+      given(declarationRepository.findByEori(meq(eori))).willReturn(Future.successful(Seq(persistedDeclaration)))
+
+      service.findByEori(eori).futureValue mustBe Seq(persistedDeclaration)
     }
   }
 

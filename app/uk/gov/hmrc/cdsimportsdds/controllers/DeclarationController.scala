@@ -20,11 +20,12 @@ import java.util.UUID
 
 import javax.inject.{Inject, Singleton}
 import play.api.libs.json.Json
-import play.api.mvc.{Action, ControllerComponents, Result}
+import play.api.mvc.{Action, AnyContent, ControllerComponents, Request, Result}
 import uk.gov.hmrc.cdsimportsdds.config.AppConfig
 import uk.gov.hmrc.cdsimportsdds.models.ImportsDeclaration
 import uk.gov.hmrc.cdsimportsdds.services.DeclarationService
 import RESTFormatters.formatImportsDeclaration
+import uk.gov.hmrc.cdsimportsdds.domain.Eori
 import uk.gov.hmrc.http.HeaderCarrier
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -37,11 +38,22 @@ class DeclarationController @Inject()(
                                      )(implicit executionContext: ExecutionContext)
   extends RESTController(controllerComponents) {
 
-  def create(): Action[ImportsDeclarationRequest] = Action.async(parsingJson[ImportsDeclarationRequest]) { implicit request =>
-    val eori = request.headers.get("X-EORI-Identifier")
+  private val missingEoriResponse: Future[Result] =
+    Future.successful(Unauthorized(Json.toJson(ErrorResponse("X-EORI-Identifier header missing"))))
+
+  def saveDeclaration(): Action[ImportsDeclarationRequest] = Action.async(parsingJson[ImportsDeclarationRequest]) { implicit request =>
+    val eori = getEori(request)
     eori match {
       case Some(eori) => saveImportsDeclaration(request.body, eori)
-      case _ => Future.successful(BadRequest(Json.toJson(ErrorResponse("X-EORI-Identifier header missing"))))
+      case _ => missingEoriResponse
+    }
+  }
+
+  def fetchDeclarations(): Action[AnyContent] = Action.async { implicit request =>
+    val eori = getEori(request)
+    eori match {
+      case Some(eori) => declarationService.findByEori(eori).map(declarations => Ok(declarations))
+      case _ => missingEoriResponse
     }
   }
 
@@ -51,6 +63,10 @@ class DeclarationController @Inject()(
     declarationService
       .create(importsDeclaration)
       .map(declaration => Created(declaration))
+  }
+
+  private def getEori(request: Request[_]): Option[Eori] = {
+    request.headers.get("X-EORI-Identifier")
   }
 
 }

@@ -16,14 +16,13 @@
 
 package integration.uk.gov.hmrc.cdsimportsdds.repositories
 
-import java.time.{LocalDate, ZoneOffset}
-
 import com.codahale.metrics.SharedMetricRegistries
 import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.api.ReadConcern
 import uk.gov.hmrc.cdsimportsdds.repositories.DeclarationRepository
+import uk.gov.hmrc.cdsimportsdds.repositories.MongoFormatters.formatDeclaration
 import uk.gov.hmrc.cdsimportsdds.utils.ImportsDeclarationBuilder
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -59,6 +58,25 @@ class DeclarationRepositoryTest extends WordSpec
       repository.create(declaration).futureValue shouldBe declaration
 
       collectionSize shouldBe 1
+    }
+  }
+
+  "findByEori" should {
+    val declarations = Seq(
+      anImportsDeclaration.copy(id = "1", eori = "GB1111"),
+      anImportsDeclaration.copy(id = "2", eori = "GB3333"),
+      anImportsDeclaration.copy(id = "3", eori = "GB2222"),
+      anImportsDeclaration.copy(id = "4", eori = "GB3333")
+    )
+
+    "return all declarations for the given EORI" in {
+      repository.collection.insert.many(declarations)
+      repository.findByEori("GB3333").futureValue.map(_.id) shouldBe Seq("2", "4")
+    }
+
+    "return an empty sequence when there are no declarations for the given EORI" in {
+      repository.collection.insert.many(declarations)
+      repository.findByEori("GB0000").futureValue shouldBe Seq.empty
     }
   }
 

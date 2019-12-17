@@ -23,4 +23,4 @@ import uk.gov.hmrc.cdsimportsdds.domain.Eori
 case class ImportsDeclaration(id: String,
                               eori: Eori,
                               lrn: String,
-                              createdDateTime: Instant)
+                              submissionDateTime: Instant)

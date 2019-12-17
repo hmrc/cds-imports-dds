@@ -19,10 +19,11 @@ package uk.gov.hmrc.cdsimportsdds.repositories
 import com.kenshoo.play.metrics.Metrics
 import javax.inject.Inject
 import play.modules.reactivemongo.ReactiveMongoComponent
-import reactivemongo.bson.BSONObjectID
+import reactivemongo.bson.{BSONDocument, BSONObjectID}
 import uk.gov.hmrc.cdsimportsdds.config.AppConfig
 import uk.gov.hmrc.cdsimportsdds.models.ImportsDeclaration
 import MongoFormatters.formatDeclaration
+import reactivemongo.api.indexes.{Index, IndexType}
 import uk.gov.hmrc.cdsimportsdds.domain.Eori
 import uk.gov.hmrc.mongo.ReactiveRepository
 import uk.gov.hmrc.mongo.json.ReactiveMongoFormats.objectIdFormats
@@ -36,6 +37,12 @@ class DeclarationRepository @Inject()(mc: ReactiveMongoComponent, appConfig: App
     formatDeclaration,
     objectIdFormats
   ) {
+
+  override def indexes: Seq[Index] = Seq(
+    Index(Seq("eori" -> IndexType.Ascending, "id" -> IndexType.Ascending), Some("eoriAndIdIdx"), unique = true),
+    Index(Seq("submissionDateTime" -> IndexType.Ascending), Some("declarationTtlIdx"),
+      options = BSONDocument("expireAfterSeconds" -> appConfig.submittedDeclarationRetentionPeriod.toSeconds))
+  )
 
   def create(declaration: ImportsDeclaration): Future[ImportsDeclaration] =
     super.insert(declaration).map(_ => declaration)

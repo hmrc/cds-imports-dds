@@ -1,4 +1,4 @@
 # microservice specific routes
 
-POST       /declarations            uk.gov.hmrc.cdsimportsdds.controllers.DeclarationController.create()
-GET        /declarations            uk.gov.hmrc.cdsimportsdds.controllers.DeclarationController.findAll()
+POST       /declarations            uk.gov.hmrc.cdsimportsdds.controllers.DeclarationController.saveDeclaration()
+GET        /declarations            uk.gov.hmrc.cdsimportsdds.controllers.DeclarationController.fetchDeclarations()

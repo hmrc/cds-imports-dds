@@ -22,8 +22,8 @@ import org.scalatest.{BeforeAndAfterEach, Matchers, WordSpec}
 import play.api.inject.guice.GuiceApplicationBuilder
 import reactivemongo.api.ReadConcern
 import uk.gov.hmrc.cdsimportsdds.repositories.DeclarationRepository
-import uk.gov.hmrc.cdsimportsdds.utils.ImportsDeclarationBuilder
 import uk.gov.hmrc.cdsimportsdds.repositories.MongoFormatters.formatDeclaration
+import uk.gov.hmrc.cdsimportsdds.utils.ImportsDeclarationBuilder
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -71,7 +71,7 @@ class DeclarationRepositoryTest extends WordSpec
 
     "return all declarations for the given EORI" in {
       repository.collection.insert.many(declarations)
-      repository.findByEori("GB3333").map(_.map(_.id)).futureValue shouldBe Seq("2", "4")
+      repository.findByEori("GB3333").futureValue.map(_.id) shouldBe Seq("2", "4")
     }
 
     "return an empty sequence when there are no declarations for the given EORI" in {

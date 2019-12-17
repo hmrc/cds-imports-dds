@@ -38,7 +38,10 @@ class DeclarationController @Inject()(
                                      )(implicit executionContext: ExecutionContext)
   extends RESTController(controllerComponents) {
 
-  def create(): Action[ImportsDeclarationRequest] = Action.async(parsingJson[ImportsDeclarationRequest]) { implicit request =>
+  private val missingEoriResponse: Future[Result] =
+    Future.successful(Unauthorized(Json.toJson(ErrorResponse("X-EORI-Identifier header missing"))))
+
+  def saveDeclaration(): Action[ImportsDeclarationRequest] = Action.async(parsingJson[ImportsDeclarationRequest]) { implicit request =>
     val eori = getEori(request)
     eori match {
       case Some(eori) => saveImportsDeclaration(request.body, eori)
@@ -46,11 +49,7 @@ class DeclarationController @Inject()(
     }
   }
 
-  private def missingEoriResponse: Future[Result] = {
-    Future.successful(Unauthorized(Json.toJson(ErrorResponse("X-EORI-Identifier header missing"))))
-  }
-
-  def findAll(): Action[AnyContent] = Action.async { implicit request =>
+  def fetchDeclarations(): Action[AnyContent] = Action.async { implicit request =>
     val eori = getEori(request)
     eori match {
       case Some(eori) => declarationService.findByEori(eori).map(declarations => Ok(declarations))
